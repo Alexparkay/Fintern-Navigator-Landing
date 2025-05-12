@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { Check, Loader } from 'lucide-react';
+import { Check, Loader, ArrowRight, Sparkles } from 'lucide-react';
 
 const EmailSignupForm: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -24,56 +23,34 @@ const EmailSignupForm: React.FC = () => {
       });
       return;
     }
+
+    // Validate name is provided
+    if (!name.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter your name.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     
     try {
-      // Store email in Supabase
-      const { data, error } = await supabase
-        .from('early_access_signups')
-        .insert([{ email, name: name || null }])
-        .select()
-        .single();
+      // Send data to webhook
+      const response = await fetch('https://hook.eu2.make.com/9om2mkg6p889wmvk6m4sghklc9eq10wm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email,
+          name
+        })
+      });
 
-      if (error) {
-        if (error.code === '23505') { // Unique violation
-          toast({
-            title: "Already signed up",
-            description: "This email is already on our waitlist!",
-            variant: "default",
-          });
-        } else {
-          console.error('Signup error:', error);
-          toast({
-            title: "Something went wrong",
-            description: "Please try again later.",
-            variant: "destructive",
-          });
-        }
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Send confirmation email through edge function
-      try {
-        const response = await fetch('https://mussohmoarxpegzkwcse.supabase.co/functions/v1/send-confirmation', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''}`
-          },
-          body: JSON.stringify({ email, name: name || null })
-        });
-
-        const result = await response.json();
-        
-        if (!response.ok) {
-          console.warn('Email confirmation warning:', result);
-          // We don't show this to the user, just proceed as if signup was successful
-        }
-      } catch (emailError) {
-        console.error('Email sending error:', emailError);
-        // We don't show this to the user, just proceed as if signup was successful
+      if (!response.ok) {
+        throw new Error('Failed to submit form');
       }
 
       // Success
@@ -98,44 +75,72 @@ const EmailSignupForm: React.FC = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto flex flex-col gap-4 relative z-10 animate-fade-in">
-      <div className="flex flex-col gap-3 mb-2">
-        <div className="relative">
-          <Input
-            type="text"
-            placeholder="Your name (optional)"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="dark-input text-base bg-white/10 text-white border-white/20 focus:border-finter-accent text-center"
-            disabled={isSubmitting}
-          />
+    <form onSubmit={handleSubmit} className="w-full max-w-md mx-auto flex flex-col gap-6 relative z-10 animate-fade-in">
+      <div className="glass-panel p-6 rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 backdrop-blur-md border border-white/10 shadow-lg">
+        <div className="flex flex-col gap-4 mb-6">
+          <div className="relative group">
+            <Input
+              type="text"
+              placeholder="Enter your name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="h-12 dark-input text-base bg-white/10 text-white border-white/20 focus:border-purple-500 rounded-xl pl-4"
+              disabled={isSubmitting}
+              required
+            />
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+          </div>
+          <div className="relative group">
+            <Input
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-12 dark-input text-base bg-white/10 text-white border-white/20 focus:border-purple-500 rounded-xl pl-4"
+              disabled={isSubmitting}
+              required
+            />
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+          </div>
         </div>
-        <div className="relative">
-          <Input
-            type="email"
-            placeholder="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="dark-input text-base bg-white/10 text-white border-white/20 focus:border-finter-accent text-center"
+        
+        <div className="relative group">
+          <Button 
+            type="submit" 
+            className="w-full h-14 rounded-xl bg-gradient-to-r from-pink-500 via-purple-600 to-blue-500 text-white font-semibold text-lg shadow-xl shadow-purple-500/20 hover:shadow-2xl hover:shadow-purple-500/40 transition-all duration-300 flex items-center justify-center overflow-hidden"
             disabled={isSubmitting}
-            required
-          />
+          >
+            {isSubmitting ? (
+              <><Loader className="animate-spin mr-2" size={18} /> Processing...</>
+            ) : isSuccess ? (
+              <><Check className="mr-2" size={18} /> Added to waitlist</>
+            ) : (
+              <>
+                {/* Glassmorphic overlay effect */}
+                <div className="absolute inset-0 bg-white/10 backdrop-blur-sm group-hover:bg-white/20 transition-colors duration-300"></div>
+                
+                {/* Animated gradient border */}
+                <div className="absolute inset-0 rounded-xl border border-white/20 group-hover:border-white/40 transition-colors duration-300"></div>
+                
+                {/* Content */}
+                <div className="relative flex items-center justify-center gap-3 group-hover:scale-105 transition-transform duration-300">
+                  <Sparkles size={18} className="text-yellow-300 animate-pulse" />
+                  Join Waitlist
+                  <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
+                </div>
+                
+                {/* Glow effect */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-pink-500/30 via-purple-600/30 to-blue-500/30 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+              </>
+            )}
+          </Button>
+          
+          {/* Pulsing circles for extra emphasis */}
+          <div className="absolute -bottom-3 -right-3 w-6 h-6 bg-pink-500 rounded-full animate-ping opacity-30"></div>
+          <div className="absolute -top-3 -left-3 w-6 h-6 bg-blue-500 rounded-full animate-ping opacity-30" style={{ animationDelay: '1s' }}></div>
         </div>
       </div>
-      <Button 
-        type="submit" 
-        className="cta-button !py-4 text-base mx-auto"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? (
-          <><Loader className="animate-spin mr-2" size={18} /> Signing up...</>
-        ) : isSuccess ? (
-          <><Check className="mr-2" size={18} /> Added to waitlist</>
-        ) : (
-          "Get Early Access"
-        )}
-      </Button>
-      <p className="text-sm text-center text-finter-muted">
+      <p className="text-sm text-center text-finter-muted px-4">
         Join waitlist to get your 30-day free trial before launch
       </p>
     </form>

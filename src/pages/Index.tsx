@@ -520,25 +520,8 @@ const Index = () => {
               </motion.div>
               
               <motion.div variants={fadeIn} custom={2}>
-                {/* Simplified Email Form */}
-                <div className="dark-input-container mx-auto max-w-md">
-                  <div className="relative">
-                    <input 
-                      type="email" 
-                      placeholder="Enter your email address" 
-                      className="dark-input w-full pr-32 focus:border-purple-500/50"
-                    />
-                    <button 
-                      type="submit" 
-                      className="absolute right-1.5 top-1.5 bottom-1.5 px-5 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white font-medium hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
-                    >
-                      Join Waitlist
-                    </button>
-                  </div>
-                  <p className="text-xs text-blue-100/50 mt-2 text-left">
-                    By signing up, you'll receive updates about our launch and early access opportunities.
-                  </p>
-                </div>
+                {/* Use EmailSignupForm component */}
+                <EmailSignupForm />
               </motion.div>
             </motion.div>
           </div>
@@ -560,14 +543,17 @@ const Index = () => {
                     <span className="text-2xl mr-2">✨</span>
                     <h2 className="text-2xl md:text-3xl font-semibold text-white">
                       Ready to stand out to top firms?
-                  </h2>
+                    </h2>
                   </div>
                   <p className="text-blue-100/60">
                     Join thousands of university students who've secured finance internships with Fintern Navigator
                   </p>
                 </div>
-                <a href="#signup" className="px-8 py-4 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-medium hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 flex items-center gap-2 w-full md:w-auto justify-center group">
-                  Join the Beta <ChevronRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
+                <a 
+                  href="#signup" 
+                  className="px-10 py-4 rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold shadow-lg shadow-purple-500/20 hover:shadow-xl hover:shadow-purple-500/30 transition-all duration-300 flex items-center gap-3 w-full md:w-auto justify-center group border border-white/10"
+                >
+                  Join Beta <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
                 </a>
               </div>
             </motion.div>
@@ -593,7 +579,7 @@ const Index = () => {
                 <a href="#" className="text-sm text-blue-100/60 hover:text-white transition-colors">Terms</a>
                 <p className="text-sm text-blue-100/50">
                   © 2025 Fintern Navigator. All rights reserved.
-              </p>
+                </p>
               </div>
             </div>
           </div>
